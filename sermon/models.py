@@ -5,33 +5,46 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
 from datetime import datetime
+from django_extensions.db.models import TimeStampedModel, TitleSlugDescriptionModel
+from myutils.models import MarkupMixin
 from sermon.managers import PublicManager
+''' You can import a person model from wherever '''
+try:
+    from committees.models import Person
+except:
+    pass
 
-class StandardMetadata(models.Model):
-    """
-    A basic (abstract) model for metadata.
-
-        Included in each model file to maintain application separation.
-
-        Subclass new models from 'StandardMetadata' instead of 'models.Model'.
-    """
-    created = models.DateTimeField(default=datetime.now, editable=False)
-    updated = models.DateTimeField(default=datetime.now, editable=False)
-    owner = models.ForeignKey(User, blank=True, null=True)
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        self.updated = datetime.now()
-        super(StandardMetadata, self).save(*args, **kwargs)
-
-class Speaker(models.Model):
-    title = models.CharField(max_length=30, blank=True, null=True)
-    name = models.CharField(max_length=60)
+class SpeakerTitle(models.Model):
+    title = models.CharField(_('Title'), max_length=60)
+    slug = models.CharField(_('Slug'), max_length=60)
     
     def __unicode__(self):
-	return self.title + " " + self.name	
+        return self.title
+
+class Speaker(models.Model):
+    title = models.ForeignKey(SpeakerTitle, blank=True, null=True)
+    slug = models.SlugField(_('Slug'), max_length=100, unique=True)
+    if Person:
+        person = models.ForeignKey(Person)
+    else:
+        one_off_name = models.CharField(_('Name'), max_length=100)
+    
+    @property
+    def name(self):
+        try:
+            return self.person.full_name
+        except:
+            return self.one_off_name
+
+    def __unicode__(self):
+        if self.title:
+            return self.title.title + " " + self.name
+        else:
+            return self.name
+
+    def get_absolute_url(self):
+        args=[self.slug]
+        return reverse('sr-speaker-detail', args=args)
 
 
 class Reading(models.Model):
@@ -42,15 +55,16 @@ class Reading(models.Model):
         return self.source
 
 
-class Sermon(StandardMetadata):
+class Sermon(MarkupMixin, TimeStampedModel):
     speaker = models.ForeignKey(Speaker)
     date = models.DateField()
     title = models.CharField(_('title'), max_length=150)
     slug = models.SlugField(_('slug'), unique=True)
     readings = models.ManyToManyField(Reading, blank=True, null=True)
-    mp3file = models.FileField(upload_to="sermons/",help_text=_("This should be a low quality version (preferably 18kbps), because it will be used for the Flash player."))
-    largemp3file = models.FileField(upload_to="sermons/",blank=True,help_text=_("Optional. Preferably a 64kps version."))
-    body = models.TextField(_('body'))
+    mp3file = models.FileField(upload_to="sermons/", blank=True, null=True, help_text=_("This should be a low quality version (preferably 18kbps), because it will be used for the Flash player."))
+    largemp3file = models.FileField(upload_to="sermons/", null=True, blank=True,help_text=_("Optional. Preferably a 64kps version."))
+    body = models.TextField(_('Body'))
+    rendered_content = models.TextField(_('Rendered content'), blank=True, null=True, editable=False)
     published = models.BooleanField(_('published'), default=True)
     publish_on = models.DateTimeField()
     objects = PublicManager()
@@ -58,13 +72,42 @@ class Sermon(StandardMetadata):
     class Meta:
         verbose_name = _('sermon')
         verbose_name_plural = _('sermons')
-        ordering = ('-publish_on',)
         get_latest_by = 'publish_on'
+
+    class MarkupOptions:
+        source_field = 'body'
+        rendered_field = 'rendered_content'
     
     def __unicode__(self):
         return u'%s - %s - %s' % (self.date.isoformat(), self.title, self.speaker.name)
 
     def get_absolute_url(self):
-        args=[self.slug]
+        args=[self.date.year, self.slug]
         return reverse('sr-sermon-detail', args=args)
+
+    def get_next_sermon(self):
+        """Determines the next live sermon"""
+
+        if not self._next:
+            try:
+                qs = Sermon.objects.all().exclude(id__exact=self.id)
+                sermon= qs.filter(date__gte=self.date).order_by('-date')[0]
+            except (Article.DoesNotExist, IndexError):
+                article = None
+            self._next = article
+
+        return self._next
+
+    def get_previous_article(self):
+        """Determines the previous live article"""
+
+        if not self._next:
+            try:
+                qs = Sermon.objects.all().exclude(id__exact=self.id)
+                sermon= qs.filter(date__lte=self.date).order_by('-date')[0]
+            except (Article.DoesNotExist, IndexError):
+                article = None
+            self._previous = article
+
+        return self._next
 
