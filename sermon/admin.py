@@ -1,5 +1,5 @@
 from django.contrib import admin
-from sermon.models import Sermon, Reading, Speaker
+from sermon.models import Sermon, Reading, Speaker, SpeakerTitle
 
 class SermonAdmin(admin.ModelAdmin):
     
@@ -9,4 +9,5 @@ class SermonAdmin(admin.ModelAdmin):
     
 admin.site.register(Sermon, SermonAdmin)
 admin.site.register(Reading)
+admin.site.register(SpeakerTitle)
 admin.site.register(Speaker)

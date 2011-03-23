@@ -11,9 +11,14 @@ def index(request):
     return render_to_response('sermon/index.html', locals(),
                               context_instance=RequestContext(request))
 
-def sermon_detail(request, slug):
-    sermon=Sermon.objects.get(slug=slug)
+def sermon_detail(request, slug, year):
+    sermon=Sermon.objects.get(slug=slug, date__year=year)
     return render_to_response('sermon/sermon_detail.html', locals(),
+                              context_instance=RequestContext(request))
+    
+def speaker_detail(request, slug):
+    speaker=Speaker.objects.get(slug=slug)
+    return render_to_response('sermon/speaker_detail.html', locals(),
                               context_instance=RequestContext(request))
 
 def readings(request):

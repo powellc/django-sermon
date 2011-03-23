@@ -11,16 +11,19 @@
 </div>
 
 <div class="grid_8 sermon-body">
+  {% if sermon.mp3file %}
   <dl class="audio-player" id="sermon-audio-{{sermon.id}}">
     <dt>Watch the sermon</dt>
     <dd>  
 	  This could have an audio player.
     </dd>
   </dl>
-  {{sermon.body|typogrify|markdown}}
+  {% endif %}
+  {{sermon.rendered_content}}
   <p><a href="{% url sr-index %}">Read more sermons</a></p>
 </div>
 
+{% if sermon.readings.all %}
 <div id="sidebar" class="grid_3 box ">
 <h2>Readings</h2>
 <ol>
@@ -32,5 +35,6 @@
 {% endfor %}
 </ol>
 </div>
+{% endif %}
 
 {% endblock %}
