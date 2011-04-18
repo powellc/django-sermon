@@ -7,12 +7,9 @@ from django.contrib.auth.models import User
 from datetime import datetime
 from django_extensions.db.models import TimeStampedModel, TitleSlugDescriptionModel
 from myutils.models import MarkupMixin
-from sermon.managers import PublicManager
+from sermon.managers import PublishedManager
+
 ''' You can import a person model from wherever '''
-try:
-    from committees.models import Person
-except:
-    pass
 
 class SpeakerTitle(models.Model):
     title = models.CharField(_('Title'), max_length=60)
@@ -24,10 +21,11 @@ class SpeakerTitle(models.Model):
 class Speaker(models.Model):
     title = models.ForeignKey(SpeakerTitle, blank=True, null=True)
     slug = models.SlugField(_('Slug'), max_length=100, unique=True)
-    if Person:
+    try:
+        from committees.models import Person
         person = models.ForeignKey(Person)
-    else:
-        one_off_name = models.CharField(_('Name'), max_length=100)
+    except:
+        person = models.CharField(_('Person'), max_length=100)
     
     @property
     def name(self):
@@ -67,7 +65,8 @@ class Sermon(MarkupMixin, TimeStampedModel):
     rendered_content = models.TextField(_('Rendered content'), blank=True, null=True, editable=False)
     published = models.BooleanField(_('published'), default=True)
     publish_on = models.DateTimeField()
-    objects = PublicManager()
+    objects = models.Manager()
+    published_objects = PublishedManager()
 
     class Meta:
         verbose_name = _('sermon')

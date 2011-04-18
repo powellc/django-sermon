@@ -1,4 +1,5 @@
 import re
+import logging
 
 from django import template
 from django.conf import settings
@@ -14,7 +15,8 @@ class LatestSermons(template.Node):
         self.var_name = var_name
 
     def render(self, context):
-        sermons = Sermon.objects.published()[:self.limit]
+        logging.debug('Fetching %s sermons from published items.' % (self.limit))
+        sermons = Sermon.published_objects.all()[:self.limit]
         if sermons and (self.limit == 1):
             context[self.var_name] = sermons[0]
         else:
