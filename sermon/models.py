@@ -11,15 +11,7 @@ from sermon.managers import PublishedManager
 
 ''' You can import a person model from wherever '''
 
-class SpeakerTitle(models.Model):
-    title = models.CharField(_('Title'), max_length=60)
-    slug = models.CharField(_('Slug'), max_length=60)
-    
-    def __unicode__(self):
-        return self.title
-
 class Speaker(models.Model):
-    title = models.ForeignKey(SpeakerTitle, blank=True, null=True)
     slug = models.SlugField(_('Slug'), max_length=100, unique=True)
     try:
         from committees.models import Person
@@ -32,11 +24,11 @@ class Speaker(models.Model):
         try:
             return self.person.full_name
         except:
-            return self.one_off_name
+            return self.person
 
     def __unicode__(self):
-        if self.title:
-            return self.title.title + " " + self.name
+        if self.person.title:
+            return self.person.title + " " + self.name
         else:
             return self.name
 
