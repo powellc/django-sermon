@@ -1,5 +1,5 @@
 from django.contrib import admin
-from sermon.models import Sermon, Reading, Speaker, SpeakerTitle
+from sermon.models import Sermon, Reading, Speaker
 
 class SermonAdmin(admin.ModelAdmin):
     
