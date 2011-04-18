@@ -9,5 +9,4 @@ class SermonAdmin(admin.ModelAdmin):
     
 admin.site.register(Sermon, SermonAdmin)
 admin.site.register(Reading)
-admin.site.register(SpeakerTitle)
 admin.site.register(Speaker)
