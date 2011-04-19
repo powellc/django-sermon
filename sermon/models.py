@@ -1,12 +1,13 @@
+from datetime import datetime
 from django.db import models
 from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
-from datetime import datetime
 from django_extensions.db.models import TimeStampedModel, TitleSlugDescriptionModel
-from myutils.models import MarkupMixin
+from markup_mixin.models import MarkupMixin
+
 from sermon.managers import PublishedManager
 
 ''' You can import a person model from wherever '''
