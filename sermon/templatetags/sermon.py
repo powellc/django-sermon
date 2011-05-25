@@ -16,7 +16,7 @@ class LatestSermons(template.Node):
 
     def render(self, context):
         logging.debug('Fetching %s sermons from published items.' % (self.limit))
-        sermons = Sermon.published_objects.all()[:self.limit]
+        sermons = Sermon.published_objects.all().order_by('-date')[:self.limit]
         if sermons and (self.limit == 1):
             context[self.var_name] = sermons[0]
         else:
